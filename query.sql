@@ -1,7 +1,8 @@
 SELECT 
-    paintings.title, 
-    colors.color, 
-    colors.color_hex
+    paintings.title,
+    episodes.season,
+    episodes.episode_number,
+    episodes.youtube_url
 FROM paintings 
-JOIN colors ON paintings.painting_id = colors.painting_id
-ORDER BY paintings.title, colors.color;
+JOIN episodes ON paintings.painting_id = episodes.painting_id
+WHERE paintings.title = 'Autumn Glory';
