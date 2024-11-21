@@ -1,6 +1,6 @@
 {
-  "type": "module",
   "dependencies": {
-    "csv-parser": "^3.0.0"
+    "csv-parser": "^3.0.0",
+    "pg": "^8.13.1"
   }
 }
