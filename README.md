@@ -1,122 +1,220 @@
-# The Joy of Painting ETL Project
+# Bob Ross Episodes API
 
-This project focuses on implementing an **ETL (Extract, Transform, Load)** pipeline to consolidate data about _The Joy of Painting_ TV show into a centralized database. The aim is to transform scattered and diverse data formats into a structured and usable format, enabling viewers to filter episodes based on various criteria such as broadcast month, subject matter, and color palette.
+## Database Schema
 
-## Table of Contents
+The API uses a PostgreSQL database with the following structure:
 
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Data Sources](#data-sources)
-- [Database Design](#database-design)
-- [API Design](#api-design)
-- [Setup Instructions](#setup-instructions)
-- [Usage](#usage)
-- [Future Enhancements](#future-enhancements)
+```sql
+-- Create 'paintings' table
+CREATE TABLE paintings (
+    painting_id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    image_url TEXT
+);
 
----
+-- Create 'colors' table
+CREATE TABLE colors (
+    color_id SERIAL PRIMARY KEY,
+    painting_id INT NOT NULL,
+    color_hex CHAR(7) NOT NULL,
+    color VARCHAR(50),
+    FOREIGN KEY (painting_id) REFERENCES paintings (painting_id)
+);
 
-## Project Overview
+-- Create 'episodes' table
+CREATE TABLE episodes (
+    episode_id SERIAL PRIMARY KEY,
+    painting_id INT NOT NULL,
+    episode_number INT NOT NULL,
+    air_date INT NOT NULL,
+    season INT NOT NULL,
+    youtube_url TEXT,
+    FOREIGN KEY (painting_id) REFERENCES paintings (painting_id)
+);
 
-Public broadcasting stations have received an overwhelming number of requests for information about _The Joy of Painting_ episodes. This project aims to build a backend system to support a front-end application that allows users to filter and explore episode information based on the following:
+-- Create 'features' table
+CREATE TABLE features (
+    feature_id SERIAL PRIMARY KEY,
+    feature_name TEXT NOT NULL UNIQUE
+);
 
-1. **Month of Original Broadcast**
-2. **Subject Matter**
-3. **Color Palette**
+-- Create 'painting_features' table
+CREATE TABLE painting_features (
+    painting_id INT NOT NULL,
+    feature_id INT NOT NULL,
+    value BOOLEAN NOT NULL,
+    FOREIGN KEY (painting_id) REFERENCES paintings (painting_id),
+    FOREIGN KEY (feature_id) REFERENCES features (feature_id),
+    PRIMARY KEY (painting_id, feature_id)
+);
+```
 
-The provided data comes in various formats, such as CSV, JSON, XML, and API responses, which must be consolidated into a relational database to make it queryable and usable for building APIs.
+## API Endpoints
 
----
+### Get Filtered Episodes
 
-## Features
+`GET /api/episodes`
 
-- **ETL Pipeline**:  
-  Extracts data from multiple sources, transforms it into a uniform structure, and loads it into a centralized PostgreSQL database.
+#### Query Parameters
 
-- **Filtering Capabilities**:  
-  The database design supports filtering episodes based on:
+|
+ Parameter 
+|
+ Type 
+|
+ Description 
+|
+ Example 
+|
+|
+-----------
+|
+------
+|
+-------------
+|
+----------
+|
+|
+`colors`
+|
+ string 
+|
+ Comma-separated list of colors 
+|
+ "Black,White,Brown" 
+|
+|
+`features`
+|
+ string 
+|
+ Comma-separated list of features 
+|
+ "tree,mountain,lake" 
+|
+|
+`month`
+|
+ string 
+|
+ Comma-separated list of months (1-12) 
+|
+ "1,12" 
+|
+|
+`matchType`
+|
+ string 
+|
+ Match type: 'all' or 'any' (default: 'all') 
+|
+ "all" 
+|
 
-  - Month of original broadcast
-  - Subject matter (e.g., mountains, lakes, trees)
-  - Color palette used in paintings
+#### Example Requests
 
-- **RESTful API**:  
-  An API will be developed to provide endpoints for accessing and filtering episode data.
+Find episodes with both trees and mountains that use blue:
+```bash
+curl "http://localhost:3000/api/episodes?features=tree,mountain&colors=blue&matchType=all"
+```
 
----
+Find episodes with either trees OR lakes OR aired in January:
+```bash
+curl "http://localhost:3000/api/episodes?features=tree,lake&month=1&matchType=any"
+```
 
-## Data Sources
+Find episodes that use both black and white colors:
+```bash
+curl "http://localhost:3000/api/episodes?colors=black,white&matchType=all"
+```
 
-The data includes:
+#### Response Format
 
-- **CSV Files**: Episode details and metadata
-- **JSON Files**: Information about color palettes and their usage
-- **XML Files**: Subject matter descriptions
-- **API Responses**: Supplementary data from third-party services
+```json
+{
+  "filters_applied": {
+    "colors": ["blue"],
+    "features": ["tree", "mountain"],
+    "months": [],
+    "match_type": "all"
+  },
+  "total_matches": 1,
+  "episodes": [
+    {
+      "episode": {
+        "season": 3,
+        "number": 12,
+        "air_date": "4/12/1983"
+      },
+      "painting": {
+        "id": 67,
+        "title": "Mountain Stream",
+        "features": ["tree", "mountain", "stream"],
+        "colors": ["Blue", "Green", "Brown"]
+      }
+    }
+  ]
+}
+```
 
----
+## Setup
 
-## Database Design
+1. Ensure PostgreSQL is installed and running
+2. Create the database tables using the provided schema
+3. Install dependencies:
+    ```bash
+    npm install express pg
+    ```
+4. Configure database connection in `db/db.js`
+5. Start the server:
+    ```bash
+    node server.js
+    ```
 
-The centralized database (PostgreSQL) is designed with the following tables:
+The server will start on port 3000 by default. You can modify the port by setting the `PORT` environment variable.
 
-1. **Episodes**: Stores details about each episode, including title, season, and broadcast month.
-2. **Subjects**: Lists subject matters featured in each episode (e.g., mountains, lakes).
-3. **Colors**: Tracks color palettes used in the episodes.
-4. **Episode_Subjects**: A junction table linking episodes and their subjects.
-5. **Episode_Colors**: A junction table linking episodes and their color palettes.
+## Notes
 
----
+- Case-insensitive searching for colors and features
+- Dates are stored as Unix timestamps and converted to local date strings in responses
+- All responses are formatted with proper indentation
+- `matchType=all`: Results include episodes matching every specified criterion
+- `matchType=any`: Results include episodes matching at least one criterion
 
-## API Design
+## Error Handling
 
-The API will expose the following endpoints:
+|
+ Status Code 
+|
+ Description 
+|
+|
+-------------
+|
+-------------
+|
+|
+ 200 
+|
+ Successful request with results (even if no matches found) 
+|
+|
+ 500 
+|
+ Internal Server Error with error message in response 
+|
 
-- **GET /episodes**  
-  Retrieve all episodes with optional filters (month, subject, color).
-- **GET /subjects**  
-  List all available subject matters.
+## Example Query Generation
 
-- **GET /colors**  
-  List all colors used in the episodes.
+Sample SQL query for finding episodes with specific features (ALL match):
 
-- **GET /episodes/:id**  
-  Retrieve details of a specific episode.
-
----
-
-## Setup Instructions
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://https://github.com/chdrchz/atlas-the-joy-of-painting-api
-   cd joy-of-painting-etl
-
-   ```
-
-2. **Install Dependencies**
-
-   ```bash
-   npm install
-
-   ```
-
-3. **Set Up PostgreSQL Database**
-
-4. **Run the ETL pipeline**
-
-5. **Start the server**
-   ```bash
-   npm start
-   ```
-
----
-
-## Usage
-
-- Use the API to retrieve and filter episode data based on user preferences.
-- Integrate the API with the front-end application to display episodes dynamically.
-
-## License
-
-This project is licensed under the MIT license.
+```sql
+SELECT painting_id 
+FROM painting_features pf
+JOIN features f ON pf.feature_id = f.feature_id 
+WHERE f.feature_name = ANY(ARRAY['tree', 'mountain'])
+AND pf.value = TRUE
+GROUP BY painting_id 
+HAVING COUNT(DISTINCT f.feature_name) = 2;
+```
