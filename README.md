@@ -55,62 +55,14 @@ CREATE TABLE painting_features (
 
 `GET /api/episodes`
 
-#### Query Parameters
+## Query Parameters
 
-|
- Parameter 
-|
- Type 
-|
- Description 
-|
- Example 
-|
-|
------------
-|
-------
-|
--------------
-|
-----------
-|
-|
-`colors`
-|
- string 
-|
- Comma-separated list of colors 
-|
- "Black,White,Brown" 
-|
-|
-`features`
-|
- string 
-|
- Comma-separated list of features 
-|
- "tree,mountain,lake" 
-|
-|
-`month`
-|
- string 
-|
- Comma-separated list of months (1-12) 
-|
- "1,12" 
-|
-|
-`matchType`
-|
- string 
-|
- Match type: 'all' or 'any' (default: 'all') 
-|
- "all" 
-|
+| Parameter  | Type   | Description                                | Example             |
+|------------|--------|--------------------------------------------|---------------------|
+| `colors`   | string | Comma-separated list of colors             | "Black,White,Brown" |
+| `features` | string | Comma-separated list of features           | "tree,mountain,lake"|
+| `month`    | string | Comma-separated list of months (1-12)      | "1,12"              |
+| `matchType`| string | Match type: 'all' or 'any' (default: 'all')| "all"               |
 
 #### Example Requests
 
