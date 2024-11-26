@@ -136,26 +136,10 @@ The server will start on port 3000 by default. You can modify the port by settin
 
 ## Error Handling
 
-|
- Status Code 
-|
- Description 
-|
-|
--------------
-|
--------------
-|
-|
- 200 
-|
- Successful request with results (even if no matches found) 
-|
-|
- 500 
-|
- Internal Server Error with error message in response 
-|
+| Status Code | Description                                                |
+|-------------|------------------------------------------------------------|
+| 200         | Successful request with results (even if no matches found) |
+| 500         | Internal Server Error with error message in response       |
 
 ## Example Query Generation
 
